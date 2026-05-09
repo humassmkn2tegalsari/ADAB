@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADAB - Sistem Karakter Siswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --accent-blue: #4facfe;
+            --accent-cyan: #00f2fe;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(25px) saturate(160%);
+            -webkit-backdrop-filter: blur(25px) saturate(160%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-glow:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .input-elegant {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s;
+        }
+
+        .input-elegant:focus { border-color: var(--accent-blue); outline: none; }
+
+        .indicator-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .indicator-content.active { max-height: 2000px; }
+        
+        /* Fixed rotation logic using CSS classes instead of JS style manipulation */
+        .accordion-btn i, .accordion-btn svg {
+            transition: transform 0.3s ease;
+        }
+        .accordion-btn.active i, .accordion-btn.active svg {
+            transform: rotate(180deg);
+        }
+        
+        .indicator-item.selected {
+            background: rgba(79, 172, 254, 0.2) !important;
+            border-color: var(--accent-blue) !important;
+        }
+        
+        .check-icon { opacity: 0; transition: opacity 0.2s; }
+        .indicator-item.selected .check-icon { opacity: 1; }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        #notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        #notification-toast.show { transform: translateX(0); }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center">
+
+    <div id="notification-toast" class="glass-panel px-6 py-4 rounded-2xl flex items-center gap-4 shadow-2xl border-l-4">
+        <div id="notif-icon-bg" class="w-10 h-10 rounded-xl flex items-center justify-center">
+            <i id="notif-icon" data-lucide="info" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <h5 id="notif-title" class="text-xs font-black uppercase tracking-widest leading-none mb-1">Status</h5>
+            <p id="notif-message" class="text-[10px] opacity-70 font-medium"></p>
+        </div>
+    </div>
+
+    <div id="login-screen" class="glass-panel w-full max-w-md p-10 rounded-[32px] text-center fade-in">
+        <div class="mb-8">
+            <div class="w-16 h-16 bg-blue-500/20 rounded-2xl mx-auto flex items-center justify-center mb-6 border border-blue-400/30">
+                <i data-lucide="shield-check" class="w-8 h-8 text-blue-400"></i>
+            </div>
+            <h1 class="text-5xl font-black italic tracking-tighter mb-1">ADAB</h1>
+            <p class="text-[9px] uppercase tracking-[0.4em] text-blue-300 font-bold opacity-70">Sistem Karakter Digital</p>
+        </div>
+
+        <div id="loading-state" class="py-4">
+            <div class="flex items-center justify-center gap-2 mb-3">
+                <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+            </div>
+            <p class="text-[10px] uppercase opacity-50 tracking-widest">Sinkronisasi Server...</p>
+        </div>
+
+        <div id="login-form" class="hidden space-y-4">
+            <div class="text-left">
+                <label class="text-[10px] font-bold uppercase opacity-40 ml-4 mb-1.5 block">Username Pengajar</label>
+                <input type="text" id="username" class="input-elegant w-full px-5 py-3.5 rounded-xl text-sm" placeholder="Username">
+            </div>
+            <div class="text-left">
+                <label class="text-[10px] font-bold uppercase opacity-40 ml-4 mb-1.5 block">Kata Sandi</label>
+                <input type="password" id="password" class="input-elegant w-full px-5 py-3.5 rounded-xl text-sm" placeholder="••••••••">
+            </div>
+            <button id="login-btn" onclick="handleLogin()" class="btn-glow w-full py-4 rounded-xl text-slate-900 font-bold uppercase tracking-widest text-xs mt-2">
+                Masuk Sistem
+            </button>
+            <p id="login-error" class="text-red-400 text-[10px] hidden font-bold uppercase tracking-tight text-center mt-2">Kredensial tidak valid</p>
+        </div>
+    </div>
+
+    <div id="main-dashboard" class="hidden w-full max-w-6xl fade-in">
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <div>
+                <h2 class="text-3xl font-black italic tracking-tighter">DASHBOARD ADAB</h2>
+                <div class="flex items-center gap-2 opacity-50">
+                    <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span id="user-display" class="text-[10px] font-bold uppercase tracking-widest">Memuat Pengguna...</span>
+                    <span id="role-badge" class="ml-2 px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[8px] font-black tracking-tighter hidden">ADMIN</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="btn-view-data" onclick="openViewDataModal()" class="hidden glass-card px-5 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/10 transition-all">
+                    <i data-lucide="eye" class="w-3 h-3"></i> Lihat Data
+                </button>
+                <button id="btn-download" onclick="downloadSheetData()" class="hidden glass-card px-5 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border-blue-500/20 text-blue-300 hover:bg-blue-500/10 transition-all">
+                    <i data-lucide="download" class="w-3 h-3"></i> Download Data
+                </button>
+                <button onclick="logout()" class="glass-card px-5 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border-red-500/20 text-red-300 hover:bg-red-500/10 transition-all">
+                    <i data-lucide="log-out" class="w-3 h-3"></i> Keluar
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass-panel p-6 rounded-[28px]">
+                    <h3 class="text-[11px] font-black uppercase tracking-[0.2em] mb-4 opacity-40">Pencarian Siswa</h3>
+                    <div class="space-y-4">
+                        <div class="relative">
+                            <input type="text" id="search-box" oninput="searchSiswa()" class="input-elegant w-full px-5 py-4 rounded-2xl text-sm" placeholder="Nama / NISN Siswa...">
+                            <div id="search-results" class="absolute top-full left-0 right-0 mt-2 glass-panel rounded-2xl overflow-hidden z-50 hidden max-h-60 overflow-y-auto"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="sel-kelas" onchange="searchSiswa()" class="input-elegant px-4 py-3 rounded-xl text-[10px] font-bold bg-slate-900 border-white/10">
+                                <option value="">SEMUA KELAS</option>
+                            </select>
+                            <select id="sel-jurusan" onchange="searchSiswa()" class="input-elegant px-4 py-3 rounded-xl text-[10px] font-bold bg-slate-900 border-white/10">
+                                <option value="">SEMUA JURUSAN</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="profile-card" class="glass-panel p-8 rounded-[32px] border-t-4 border-t-blue-400 opacity-0 translate-y-4 transition-all duration-500">
+                    <div class="flex items-center gap-5 mb-6">
+                        <div id="profile-initial" class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-2xl font-black text-slate-900 shadow-lg">-</div>
+                        <div>
+                            <h4 id="profile-name" class="text-xl font-bold tracking-tight leading-tight">Nama Siswa</h4>
+                            <p id="profile-nisn" class="text-[10px] font-bold opacity-40 tracking-widest mt-1">NISN 0000000000</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
+                        <div>
+                            <p class="text-[9px] font-black opacity-30 uppercase tracking-widest mb-1">Kelas</p>
+                            <p id="profile-kelas" class="text-xs font-bold">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black opacity-30 uppercase tracking-widest mb-1">Jurusan</p>
+                            <p id="profile-jurusan" class="text-xs font-bold">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="action-panel" class="lg:col-span-2 opacity-40 pointer-events-none transition-all duration-500">
+                <div class="glass-panel p-8 rounded-[32px] h-full min-h-[500px] flex flex-col">
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h3 class="text-xl font-black italic uppercase">Input Indikator Karakter</h3>
+                            <p id="status-badge" class="text-[9px] font-bold text-blue-400 tracking-[0.3em] uppercase mt-1">Pilih siswa terlebih dahulu</p>
+                        </div>
+                    </div>
+
+                    <div id="category-container" class="space-y-3 flex-1 overflow-y-auto pr-2 max-h-[600px] scrollbar-hide"></div>
+
+                    <div id="submit-area" class="hidden mt-8 pt-8 border-t border-white/5 fade-in">
+                        <div class="mb-4">
+                            <label class="text-[10px] font-bold uppercase opacity-40 ml-2 mb-2 block">Catatan Tambahan (Opsional)</label>
+                            <textarea id="log-note" class="input-elegant w-full p-4 rounded-2xl text-xs h-20 resize-none" placeholder="Tulis keterangan tambahan di sini..."></textarea>
+                        </div>
+                        <button onclick="openConfirmModal()" class="btn-glow w-full py-5 rounded-[20px] text-slate-900 font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3">
+                            <i data-lucide="send" class="w-4 h-4"></i> SIMPAN PENILAIAN
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-md rounded-[40px] p-10 fade-in">
+            <h4 class="text-2xl font-black italic mb-2">Konfirmasi</h4>
+            <p class="text-xs opacity-60 mb-6">Data ini akan disimpan sebagai riwayat karakter siswa.</p>
+            <div class="bg-white/5 rounded-2xl p-6 mb-6 space-y-4">
+                <div>
+                    <p class="text-[9px] font-black opacity-30 uppercase mb-1">Siswa</p>
+                    <p id="conf-siswa" class="text-sm font-bold text-blue-300">-</p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-black opacity-30 uppercase mb-1">Indikator Terpilih</p>
+                    <div id="conf-list" class="space-y-2"></div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 py-4 rounded-2xl bg-white/5 font-bold text-[11px] uppercase hover:bg-white/10 transition-all">Batal</button>
+                <button id="final-submit-btn" onclick="finalSubmit()" class="flex-1 py-4 rounded-2xl btn-glow text-slate-900 font-bold text-[11px] uppercase">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-data-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-5xl rounded-[40px] p-6 md:p-10 fade-in max-h-[90vh] flex flex-col">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div>
+                    <h4 class="text-3xl font-black italic tracking-tighter">DATA POIN SISWA</h4>
+                    <p class="text-[10px] font-bold text-cyan-400 tracking-[0.3em] uppercase">Akumulasi Real-time dari Server</p>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-64">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30"></i>
+                        <input type="text" id="table-search" oninput="searchTableData()" class="input-elegant w-full pl-12 pr-4 py-3 rounded-xl text-xs" placeholder="Cari Nama/NISN...">
+                    </div>
+                    <button onclick="closeViewDataModal()" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-x-auto scrollbar-hide border border-white/5 rounded-2xl bg-black/20">
+                <table class="w-full text-left border-collapse min-w-[700px]">
+                    <thead class="sticky top-0 bg-slate-900 z-10">
+                        <tr>
+                            <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">No</th>
+                            <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">NISN</th>
+                            <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">Nama Siswa</th>
+                            <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">Kelas</th>
+                            <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">Jurusan</th>
+                            <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10 text-right">Total Poin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-data-body">
+                        <!-- Data rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 flex justify-between items-center px-2">
+                <p id="table-info" class="text-[9px] font-bold uppercase opacity-30 tracking-widest">Memuat data...</p>
+                <div class="flex gap-2">
+                     <button onclick="openViewDataModal()" class="px-4 py-2 rounded-lg bg-white/5 text-[9px] font-bold uppercase tracking-widest hover:bg-white/10 flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            sheetId: '1baNd7ocNwJCs-BFiIj36hapP75OJOa8ZboIpjhh3SIk',
+            scriptUrl: 'https://script.google.com/macros/s/AKfycbwKKM8s7guQv04gBEoR8KAh2e60bbdX6xb4RM8MqOSrEWZV-b5RAsIhkqS5sdXFWVZ1/exec',
+            gids: {
+                siswa: '0',
+                akun: '1978168185',
+                indikator: '422331905',
+                data: '167808340'
+            }
+        };
+
+        let APP_STATE = {
+            siswa: [],
+            akun: [],
+            indikator: [],
+            currentUser: null,
+            selectedSiswa: null,
+            tempSelected: []
+        };
+
+        function robustCSVParser(text) {
+            const rows = [];
+            const lines = text.split(/\r?\n/);
+            for (let line of lines) {
+                if (!line.trim()) continue;
+                const columns = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') inQuotes = !inQuotes;
+                    else if (char === ',' && !inQuotes) {
+                        columns.push(current.trim());
+                        current = '';
+                    } else current += char;
+                }
+                columns.push(current.trim());
+                rows.push(columns);
+            }
+            return rows;
+        }
+
+        async function fetchData() {
+            try {
+                const urls = [
+                    `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.akun}`,
+                    `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.siswa}`,
+                    `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.indikator}`
+                ];
+
+                const [resAkun, resSiswa, resInd] = await Promise.all(urls.map(url => fetch(url).then(r => r.text())));
+
+                APP_STATE.akun = robustCSVParser(resAkun).slice(1).map(r => ({
+                    nama: r[1] || '',
+                    user: r[3] || '',
+                    pass: r[4] || '',
+                    role: (r[5] || 'user').toLowerCase()
+                })).filter(a => a.user);
+
+                APP_STATE.siswa = robustCSVParser(resSiswa).slice(1).map(r => ({
+                    nisn: r[1], nama: r[2], jk: r[3], kelas: r[4], jurusan: r[5]
+                })).filter(s => s.nama);
+
+                APP_STATE.indikator = robustCSVParser(resInd).slice(1).map(r => {
+                    const basePoin = parseInt(r[3]) || 0;
+                    const isKurang = (r[4] || '').toLowerCase().includes('kurang');
+                    return {
+                        name: r[1], cat: r[2],
+                        val: isKurang ? -Math.abs(basePoin) : Math.abs(basePoin)
+                    };
+                }).filter(i => i.name);
+
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('login-form').classList.remove('hidden');
+                if (window.lucide) lucide.createIcons();
+            } catch (err) {
+                console.error("Load Error:", err);
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-400 text-xs">Gagal memuat data dari Server.</p>`;
+            }
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            const found = APP_STATE.akun.find(a => a.user === u && a.pass === p);
+
+            if (found) {
+                APP_STATE.currentUser = found;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                document.getElementById('user-display').innerText = found.nama;
+                
+                if (found.role === 'admin') {
+                    document.getElementById('btn-download').classList.remove('hidden');
+                    document.getElementById('btn-view-data').classList.remove('hidden');
+                    document.getElementById('role-badge').classList.remove('hidden');
+                }
+
+                initDashboard();
+            } else {
+                const err = document.getElementById('login-error');
+                err.classList.remove('hidden');
+                setTimeout(() => err.classList.add('hidden'), 3000);
+            }
+        }
+
+        function initDashboard() {
+            populateFilters();
+            renderCategories();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function populateFilters() {
+            const kelas = [...new Set(APP_STATE.siswa.map(s => s.kelas))].sort();
+            const jurusan = [...new Set(APP_STATE.siswa.map(s => s.jurusan))].sort();
+            
+            const selK = document.getElementById('sel-kelas');
+            const selJ = document.getElementById('sel-jurusan');
+            
+            selK.innerHTML = '<option value="">SEMUA KELAS</option>' + kelas.map(k => `<option value="${k}">${k}</option>`).join('');
+            selJ.innerHTML = '<option value="">SEMUA JURUSAN</option>' + jurusan.map(j => `<option value="${j}">${j}</option>`).join('');
+        }
+
+        function searchSiswa() {
+            const query = document.getElementById('search-box').value.toLowerCase().trim();
+            const filterK = document.getElementById('sel-kelas').value;
+            const filterJ = document.getElementById('sel-jurusan').value;
+            const resultsDiv = document.getElementById('search-results');
+
+            if (query.length < 2 && !filterK && !filterJ) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            const filtered = APP_STATE.siswa.filter(s => {
+                const matchQuery = s.nama.toLowerCase().includes(query) || s.nisn.includes(query);
+                const matchKelas = filterK ? s.kelas === filterK : true;
+                const matchJurusan = filterJ ? s.jurusan === filterJ : true;
+                return matchQuery && matchKelas && matchJurusan;
+            }).slice(0, 10);
+
+            if (filtered.length > 0) {
+                resultsDiv.innerHTML = filtered.map(s => `
+                    <div onclick="selectSiswa('${s.nisn}')" class="px-6 py-3 hover:bg-blue-500/20 cursor-pointer border-b border-white/5 last:border-none transition-all">
+                        <p class="text-xs font-bold">${s.nama}</p>
+                        <p class="text-[9px] opacity-50 font-medium">NISN: ${s.nisn} • ${s.kelas} ${s.jurusan}</p>
+                    </div>
+                `).join('');
+                resultsDiv.classList.remove('hidden');
+            } else {
+                resultsDiv.classList.add('hidden');
+            }
+        }
+
+        function selectSiswa(nisn) {
+            const student = APP_STATE.siswa.find(s => s.nisn === nisn);
+            if (!student) return;
+
+            APP_STATE.selectedSiswa = student;
+            APP_STATE.tempSelected = [];
+            
+            document.getElementById('search-box').value = student.nama;
+            document.getElementById('search-results').classList.add('hidden');
+            
+            document.getElementById('profile-name').innerText = student.nama;
+            document.getElementById('profile-nisn').innerText = `NISN ${student.nisn}`;
+            document.getElementById('profile-kelas').innerText = student.kelas;
+            document.getElementById('profile-jurusan').innerText = student.jurusan;
+            document.getElementById('profile-initial').innerText = student.nama.charAt(0).toUpperCase();
+            
+            document.getElementById('profile-card').classList.remove('opacity-0', 'translate-y-4');
+            document.getElementById('action-panel').classList.remove('opacity-40', 'pointer-events-none');
+            document.getElementById('status-badge').innerText = 'Silakan pilih indikator';
+            
+            renderCategories();
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('category-container');
+            if (!container) return;
+            
+            const cats = [...new Set(APP_STATE.indikator.map(i => i.cat))];
+            
+            container.innerHTML = cats.map(cat => {
+                const items = APP_STATE.indikator.filter(i => i.cat === cat);
+                return `
+                    <div class="glass-card rounded-2xl overflow-hidden mb-2">
+                        <button onclick="toggleAccordion(this)" class="accordion-btn w-full px-6 py-4 flex justify-between items-center bg-white/5 hover:bg-white/10 transition-all group">
+                            <span class="text-[11px] font-black uppercase tracking-widest">${cat}</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </button>
+                        <div class="indicator-content px-4 py-2 space-y-1">
+                            ${items.map(item => {
+                                const isSelected = APP_STATE.tempSelected.some(s => s.name === item.name);
+                                return `
+                                    <div onclick="toggleSelection(this, '${item.name.replace(/'/g, "\\'")}', ${item.val}, '${item.cat}')" 
+                                         class="indicator-item ${isSelected ? 'selected' : ''} flex justify-between items-center px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 cursor-pointer transition-all">
+                                        <div class="flex items-center gap-3">
+                                            <div class="custom-checkbox w-4 h-4 rounded border-2 border-blue-400/30 flex items-center justify-center">
+                                                <i data-lucide="check" class="check-icon w-3 h-3 text-blue-400"></i>
+                                            </div>
+                                            <span class="text-[11px] font-medium opacity-80">${item.name}</span>
+                                        </div>
+                                        <span class="text-[10px] font-black px-2 py-1 rounded ${item.val > 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                                            ${item.val > 0 ? '+' : ''}${item.val}
+                                        </span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            if (window.lucide) lucide.createIcons();
+            document.getElementById('submit-area').classList.toggle('hidden', APP_STATE.tempSelected.length === 0);
+        }
+
+        function toggleAccordion(btn) {
+            if (!btn) return;
+            
+            const content = btn.nextElementSibling;
+            if (!content) return;
+
+            // Toggle active class on button to trigger CSS rotation
+            btn.classList.toggle('active');
+            
+            // Toggle active class on content for slide animation
+            content.classList.toggle('active');
+        }
+
+        function toggleSelection(el, name, val, cat) {
+            const idx = APP_STATE.tempSelected.findIndex(s => s.name === name);
+            if (idx > -1) {
+                APP_STATE.tempSelected.splice(idx, 1);
+                el.classList.remove('selected');
+            } else {
+                APP_STATE.tempSelected.push({ name, val, cat });
+                el.classList.add('selected');
+            }
+            document.getElementById('submit-area').classList.toggle('hidden', APP_STATE.tempSelected.length === 0);
+        }
+
+        function openConfirmModal() {
+            document.getElementById('conf-siswa').innerText = APP_STATE.selectedSiswa.nama;
+            document.getElementById('conf-list').innerHTML = APP_STATE.tempSelected.map(s => `
+                <div class="flex justify-between items-center text-[10px] py-2 border-b border-white/5 last:border-none">
+                    <span class="opacity-70">${s.name}</span>
+                    <span class="font-black ${s.val > 0 ? 'text-green-400' : 'text-red-400'}">${s.val > 0 ? '+' : ''}${s.val}</span>
+                </div>
+            `).join('');
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() { document.getElementById('confirm-modal').classList.add('hidden'); }
+
+        function finalSubmit() {
+            const btn = document.getElementById('final-submit-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "MENYIMPAN KE SERVER...";
+            btn.disabled = true;
+
+            const payload = APP_STATE.tempSelected.map(item => ({
+                nisn: "'" + APP_STATE.selectedSiswa.nisn.toString().replace(/'/g, ""),
+                nama: APP_STATE.selectedSiswa.nama,
+                kelas: APP_STATE.selectedSiswa.kelas,
+                jurusan: APP_STATE.selectedSiswa.jurusan,
+                indikator: item.name,
+                poin: parseFloat(item.val),
+                kategori: item.cat,
+                guru: APP_STATE.currentUser.nama,
+                catatan: document.getElementById('log-note').value || '-'
+            }));
+
+            fetch(CONFIG.scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                showNotification("Data berhasil disinkronkan ke Server.");
+                resetApp();
+                closeConfirmModal();
+            })
+            .catch(err => {
+                console.error("Sync Error:", err);
+                showNotification("Gagal menyambung ke Server.", "error");
+            })
+            .finally(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        let currentTableData = [];
+
+        async function openViewDataModal() {
+            const modal = document.getElementById('view-data-modal');
+            const tbody = document.getElementById('table-data-body');
+            const info = document.getElementById('table-info');
+            
+            modal.classList.remove('hidden');
+            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center opacity-30 text-xs font-bold uppercase tracking-widest">Mengambil data dari server...</td></tr>`;
+            
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.data}`;
+                const response = await fetch(url);
+                const csvText = await response.text();
+                const rows = robustCSVParser(csvText);
+                
+                // Remove header and map to objects
+                currentTableData = rows.slice(1).map(r => ({
+                    no: r[0],
+                    nisn: r[1],
+                    nama: r[2],
+                    kelas: r[3],
+                    jurusan: r[4],
+                    poin: r[5]
+                })).filter(r => r.nama);
+
+                renderTableRows(currentTableData);
+                info.innerText = `Total: ${currentTableData.length} Siswa Terdaftar`;
+                if (window.lucide) lucide.createIcons();
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center text-red-400 text-xs font-bold">Gagal mengambil data. Periksa koneksi Anda.</td></tr>`;
+                console.error(error);
+            }
+        }
+
+        function renderTableRows(data) {
+            const tbody = document.getElementById('table-data-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center opacity-30 text-xs font-bold uppercase tracking-widest">Tidak ada data ditemukan</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((r, idx) => `
+                <tr class="hover:bg-white/5 transition-all border-b border-white/5 last:border-none">
+                    <td class="px-6 py-4 text-[10px] font-bold opacity-30">${idx + 1}</td>
+                    <td class="px-6 py-4 text-[10px] font-bold text-cyan-400/80">${r.nisn}</td>
+                    <td class="px-6 py-4 text-xs font-bold">${r.nama}</td>
+                    <td class="px-6 py-4 text-[10px] font-medium opacity-60">${r.kelas}</td>
+                    <td class="px-6 py-4 text-[10px] font-medium opacity-60">${r.jurusan}</td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black ${parseFloat(r.poin) >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}">
+                            ${parseFloat(r.poin) > 0 ? '+' : ''}${r.poin}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function searchTableData() {
+            const q = document.getElementById('table-search').value.toLowerCase();
+            const filtered = currentTableData.filter(r => 
+                r.nama.toLowerCase().includes(q) || 
+                r.nisn.toString().includes(q)
+            );
+            renderTableRows(filtered);
+        }
+
+        function closeViewDataModal() {
+            document.getElementById('view-data-modal').classList.add('hidden');
+        }
+
+        async function downloadSheetData() {
+            const btn = document.getElementById('btn-download');
+            const originalHTML = btn.innerHTML;
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="animate-spin" data-lucide="refresh-cw"></i> Menyiapkan...`;
+                if (window.lucide) lucide.createIcons();
+                
+                showNotification("Sedang mengambil data terbaru...", "info");
+                const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.data}`;
+                const response = await fetch(url);
+                const csvText = await response.text();
+                const rows = robustCSVParser(csvText);
+                
+                const worksheet = XLSX.utils.aoa_to_sheet(rows);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Data Karakter");
+                
+                const fileName = `ADAB_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(workbook, fileName);
+                showNotification("Data berhasil dieksport.");
+            } catch (error) {
+                showNotification("Gagal mendownload data.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notification-toast');
+            const iconBg = document.getElementById('notif-icon-bg');
+            const icon = document.getElementById('notif-icon');
+            const title = document.getElementById('notif-title');
+            const msg = document.getElementById('notif-message');
+
+            if (type === 'success') {
+                toast.style.borderLeftColor = '#4facfe';
+                iconBg.className = 'w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400';
+                icon.setAttribute('data-lucide', 'check-circle');
+                title.innerText = 'Berhasil';
+            } else {
+                toast.style.borderLeftColor = '#f87171';
+                iconBg.className = 'w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/20 text-red-400';
+                icon.setAttribute('data-lucide', 'alert-circle');
+                title.innerText = 'Gagal';
+            }
+
+            msg.innerText = message;
+            if (window.lucide) lucide.createIcons();
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        function resetApp() {
+            APP_STATE.tempSelected = [];
+            APP_STATE.selectedSiswa = null;
+            document.getElementById('search-box').value = '';
+            document.getElementById('log-note').value = '';
+            document.getElementById('profile-card').classList.add('opacity-0', 'translate-y-4');
+            document.getElementById('action-panel').classList.add('pointer-events-none', 'opacity-40');
+            document.getElementById('submit-area').classList.add('hidden');
+            renderCategories();
+        }
+
+        function logout() { location.reload(); }
+
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
