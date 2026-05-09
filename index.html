@@ -2,7 +2,6 @@
 <html lang="id">
 <head>
     <link rel="icon" type="image/png" href="favicon.png">
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADAB - Sistem Karakter Siswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -63,7 +62,6 @@
         }
         .indicator-content.active { max-height: 2000px; }
         
-        /* Fixed rotation logic using CSS classes instead of JS style manipulation */
         .accordion-btn i, .accordion-btn svg {
             transition: transform 0.3s ease;
         }
@@ -93,6 +91,20 @@
             transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         #notification-toast.show { transform: translateX(0); }
+
+        .history-line {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .history-line::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 flex items-center justify-center">
@@ -189,7 +201,7 @@
                         <div id="profile-initial" class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-2xl font-black text-slate-900 shadow-lg">-</div>
                         <div>
                             <h4 id="profile-name" class="text-xl font-bold tracking-tight leading-tight">Nama Siswa</h4>
-                            <p id="profile-nisn" class="text-[10px] font-bold opacity-40 tracking-widest mt-1">NISN 0000000000</p>
+                            <p id="profile-nisn" class="text-[10px] font-bold opacity-40 tracking-widest mt-1">NISN -</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
@@ -230,33 +242,39 @@
         </div>
     </div>
 
+    <!-- Modal Konfirmasi -->
     <div id="confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden">
-        <div class="glass-panel w-full max-w-md rounded-[40px] p-10 fade-in">
+        <div class="glass-panel w-full max-w-md rounded-[40px] p-8 md:p-10 fade-in">
             <h4 class="text-2xl font-black italic mb-2">Konfirmasi</h4>
             <p class="text-xs opacity-60 mb-6">Data ini akan disimpan sebagai riwayat karakter siswa.</p>
-            <div class="bg-white/5 rounded-2xl p-6 mb-6 space-y-4">
+            
+            <div class="bg-white/5 rounded-3xl p-6 mb-6 space-y-4 border border-white/5">
                 <div>
-                    <p class="text-[9px] font-black opacity-30 uppercase mb-1">Siswa</p>
-                    <p id="conf-siswa" class="text-sm font-bold text-blue-300">-</p>
+                    <p class="text-[9px] font-black opacity-30 uppercase mb-1 tracking-widest">Siswa</p>
+                    <p id="conf-siswa" class="text-sm font-bold text-blue-300 leading-tight">-</p>
                 </div>
                 <div>
-                    <p class="text-[9px] font-black opacity-30 uppercase mb-1">Indikator Terpilih</p>
-                    <div id="conf-list" class="space-y-2"></div>
+                    <p class="text-[9px] font-black opacity-30 uppercase mb-2 tracking-widest">Indikator Terpilih</p>
+                    <div id="conf-list" class="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
+                        <!-- Item indikator akan muncul di sini -->
+                    </div>
                 </div>
             </div>
+
             <div class="flex gap-3">
                 <button onclick="closeConfirmModal()" class="flex-1 py-4 rounded-2xl bg-white/5 font-bold text-[11px] uppercase hover:bg-white/10 transition-all">Batal</button>
-                <button id="final-submit-btn" onclick="finalSubmit()" class="flex-1 py-4 rounded-2xl btn-glow text-slate-900 font-bold text-[11px] uppercase">Simpan</button>
+                <button id="final-submit-btn" onclick="finalSubmit()" class="flex-1 py-4 rounded-2xl btn-glow text-slate-900 font-bold text-[11px] uppercase shadow-lg shadow-blue-500/20">Simpan</button>
             </div>
         </div>
     </div>
 
+    <!-- Modal Lihat Data -->
     <div id="view-data-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] flex items-center justify-center p-4 hidden">
         <div class="glass-panel w-full max-w-5xl rounded-[40px] p-6 md:p-10 fade-in max-h-[90vh] flex flex-col">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                     <h4 class="text-3xl font-black italic tracking-tighter">DATA POIN SISWA</h4>
-                    <p class="text-[10px] font-bold text-cyan-400 tracking-[0.3em] uppercase">Akumulasi Real-time dari Server</p>
+                    <p class="text-[10px] font-bold text-cyan-400 tracking-[0.3em] uppercase">Akumulasi Real-time</p>
                 </div>
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     <div class="relative flex-1 md:w-64">
@@ -270,7 +288,7 @@
             </div>
 
             <div class="flex-1 overflow-x-auto scrollbar-hide border border-white/5 rounded-2xl bg-black/20">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table class="w-full text-left border-collapse min-w-[800px]">
                     <thead class="sticky top-0 bg-slate-900 z-10">
                         <tr>
                             <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">No</th>
@@ -279,21 +297,41 @@
                             <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">Kelas</th>
                             <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10">Jurusan</th>
                             <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10 text-right">Total Poin</th>
+                            <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/10 text-center">Riwayat</th>
                         </tr>
                     </thead>
-                    <tbody id="table-data-body">
-                        <!-- Data rows injected here -->
-                    </tbody>
+                    <tbody id="table-data-body"></tbody>
                 </table>
             </div>
             
             <div class="mt-6 flex justify-between items-center px-2">
                 <p id="table-info" class="text-[9px] font-bold uppercase opacity-30 tracking-widest">Memuat data...</p>
-                <div class="flex gap-2">
-                     <button onclick="openViewDataModal()" class="px-4 py-2 rounded-lg bg-white/5 text-[9px] font-bold uppercase tracking-widest hover:bg-white/10 flex items-center gap-2">
-                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
-                     </button>
+                <button onclick="openViewDataModal()" class="px-4 py-2 rounded-lg bg-white/5 text-[9px] font-bold uppercase tracking-widest hover:bg-white/10 flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat Detail -->
+    <div id="history-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-3xl rounded-[40px] p-8 md:p-10 fade-in max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <span class="text-[9px] font-black text-blue-400 tracking-[.4em] uppercase mb-2 block">Log Aktivitas Karakter</span>
+                    <h4 id="hist-student-name" class="text-3xl font-black italic tracking-tighter">-</h4>
+                    <p id="hist-student-info" class="text-[10px] font-bold opacity-40 uppercase mt-1 tracking-widest">-</p>
                 </div>
+                <button onclick="closeHistoryModal()" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div id="history-list" class="flex-1 overflow-y-auto pr-4 space-y-4 scrollbar-hide history-line"></div>
+
+            <div class="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+                <p id="hist-count" class="text-[9px] font-bold uppercase opacity-30 tracking-widest">0 Catatan</p>
+                <button onclick="closeHistoryModal()" class="px-8 py-3 rounded-xl bg-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Tutup</button>
             </div>
         </div>
     </div>
@@ -306,7 +344,8 @@
                 siswa: '0',
                 akun: '1978168185',
                 indikator: '422331905',
-                data: '167808340'
+                data: '167808340',
+                riwayat: '678846727'
             }
         };
 
@@ -316,7 +355,8 @@
             indikator: [],
             currentUser: null,
             selectedSiswa: null,
-            tempSelected: []
+            tempSelected: [],
+            riwayatFull: []
         };
 
         function robustCSVParser(text) {
@@ -352,23 +392,17 @@
                 const [resAkun, resSiswa, resInd] = await Promise.all(urls.map(url => fetch(url).then(r => r.text())));
 
                 APP_STATE.akun = robustCSVParser(resAkun).slice(1).map(r => ({
-                    nama: r[1] || '',
-                    user: r[3] || '',
-                    pass: r[4] || '',
-                    role: (r[5] || 'user').toLowerCase()
+                    nama: r[1] || '', user: r[3] || '', pass: r[4] || '', role: (r[5] || 'user').toLowerCase()
                 })).filter(a => a.user);
 
                 APP_STATE.siswa = robustCSVParser(resSiswa).slice(1).map(r => ({
-                    nisn: r[1], nama: r[2], jk: r[3], kelas: r[4], jurusan: r[5]
+                    nisn: (r[1] || '').trim(), nama: (r[2] || '').trim(), jk: r[3], kelas: r[4], jurusan: r[5]
                 })).filter(s => s.nama);
 
                 APP_STATE.indikator = robustCSVParser(resInd).slice(1).map(r => {
                     const basePoin = parseInt(r[3]) || 0;
                     const isKurang = (r[4] || '').toLowerCase().includes('kurang');
-                    return {
-                        name: r[1], cat: r[2],
-                        val: isKurang ? -Math.abs(basePoin) : Math.abs(basePoin)
-                    };
+                    return { name: r[1], cat: r[2], val: isKurang ? -Math.abs(basePoin) : Math.abs(basePoin) };
                 }).filter(i => i.name);
 
                 document.getElementById('loading-state').classList.add('hidden');
@@ -376,7 +410,7 @@
                 if (window.lucide) lucide.createIcons();
             } catch (err) {
                 console.error("Load Error:", err);
-                document.getElementById('loading-state').innerHTML = `<p class="text-red-400 text-xs">Gagal memuat data dari Server.</p>`;
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-400 text-xs">Gagal memuat data Server.</p>`;
             }
         }
 
@@ -408,18 +442,13 @@
         function initDashboard() {
             populateFilters();
             renderCategories();
-            if (window.lucide) lucide.createIcons();
         }
 
         function populateFilters() {
             const kelas = [...new Set(APP_STATE.siswa.map(s => s.kelas))].sort();
             const jurusan = [...new Set(APP_STATE.siswa.map(s => s.jurusan))].sort();
-            
-            const selK = document.getElementById('sel-kelas');
-            const selJ = document.getElementById('sel-jurusan');
-            
-            selK.innerHTML = '<option value="">SEMUA KELAS</option>' + kelas.map(k => `<option value="${k}">${k}</option>`).join('');
-            selJ.innerHTML = '<option value="">SEMUA JURUSAN</option>' + jurusan.map(j => `<option value="${j}">${j}</option>`).join('');
+            document.getElementById('sel-kelas').innerHTML = '<option value="">SEMUA KELAS</option>' + kelas.map(k => `<option value="${k}">${k}</option>`).join('');
+            document.getElementById('sel-jurusan').innerHTML = '<option value="">SEMUA JURUSAN</option>' + jurusan.map(j => `<option value="${j}">${j}</option>`).join('');
         }
 
         function searchSiswa() {
@@ -428,23 +457,25 @@
             const filterJ = document.getElementById('sel-jurusan').value;
             const resultsDiv = document.getElementById('search-results');
 
-            if (query.length < 2 && !filterK && !filterJ) {
+            if (query.length < 1 && !filterK && !filterJ) {
                 resultsDiv.classList.add('hidden');
                 return;
             }
 
-            const filtered = APP_STATE.siswa.filter(s => {
-                const matchQuery = s.nama.toLowerCase().includes(query) || s.nisn.includes(query);
-                const matchKelas = filterK ? s.kelas === filterK : true;
-                const matchJurusan = filterJ ? s.jurusan === filterJ : true;
-                return matchQuery && matchKelas && matchJurusan;
-            }).slice(0, 10);
+            const filtered = APP_STATE.siswa
+                .map((s, originalIndex) => ({ ...s, originalIndex }))
+                .filter(s => {
+                    const matchQuery = s.nama.toLowerCase().includes(query) || s.nisn.includes(query);
+                    const matchKelas = filterK ? s.kelas === filterK : true;
+                    const matchJurusan = filterJ ? s.jurusan === filterJ : true;
+                    return matchQuery && matchKelas && matchJurusan;
+                }).slice(0, 10);
 
             if (filtered.length > 0) {
                 resultsDiv.innerHTML = filtered.map(s => `
-                    <div onclick="selectSiswa('${s.nisn}')" class="px-6 py-3 hover:bg-blue-500/20 cursor-pointer border-b border-white/5 last:border-none transition-all">
+                    <div onclick="selectSiswa(${s.originalIndex})" class="px-6 py-3 hover:bg-blue-500/20 cursor-pointer border-b border-white/5 last:border-none transition-all">
                         <p class="text-xs font-bold">${s.nama}</p>
-                        <p class="text-[9px] opacity-50 font-medium">NISN: ${s.nisn} • ${s.kelas} ${s.jurusan}</p>
+                        <p class="text-[9px] opacity-50 font-medium">NISN: ${s.nisn || '-'} • ${s.kelas} ${s.jurusan}</p>
                     </div>
                 `).join('');
                 resultsDiv.classList.remove('hidden');
@@ -453,8 +484,8 @@
             }
         }
 
-        function selectSiswa(nisn) {
-            const student = APP_STATE.siswa.find(s => s.nisn === nisn);
+        function selectSiswa(index) {
+            const student = APP_STATE.siswa[index];
             if (!student) return;
 
             APP_STATE.selectedSiswa = student;
@@ -462,26 +493,21 @@
             
             document.getElementById('search-box').value = student.nama;
             document.getElementById('search-results').classList.add('hidden');
-            
             document.getElementById('profile-name').innerText = student.nama;
-            document.getElementById('profile-nisn').innerText = `NISN ${student.nisn}`;
+            document.getElementById('profile-nisn').innerText = student.nisn ? `NISN ${student.nisn}` : "NISN TIDAK TERDAFTAR";
             document.getElementById('profile-kelas').innerText = student.kelas;
             document.getElementById('profile-jurusan').innerText = student.jurusan;
             document.getElementById('profile-initial').innerText = student.nama.charAt(0).toUpperCase();
-            
             document.getElementById('profile-card').classList.remove('opacity-0', 'translate-y-4');
             document.getElementById('action-panel').classList.remove('opacity-40', 'pointer-events-none');
-            document.getElementById('status-badge').innerText = 'Silakan pilih indikator';
+            document.getElementById('status-badge').innerText = 'Pilih indikator karakter';
             
             renderCategories();
         }
 
         function renderCategories() {
             const container = document.getElementById('category-container');
-            if (!container) return;
-            
             const cats = [...new Set(APP_STATE.indikator.map(i => i.cat))];
-            
             container.innerHTML = cats.map(cat => {
                 const items = APP_STATE.indikator.filter(i => i.cat === cat);
                 return `
@@ -512,22 +538,13 @@
                     </div>
                 `;
             }).join('');
-            
             if (window.lucide) lucide.createIcons();
             document.getElementById('submit-area').classList.toggle('hidden', APP_STATE.tempSelected.length === 0);
         }
 
         function toggleAccordion(btn) {
-            if (!btn) return;
-            
-            const content = btn.nextElementSibling;
-            if (!content) return;
-
-            // Toggle active class on button to trigger CSS rotation
             btn.classList.toggle('active');
-            
-            // Toggle active class on content for slide animation
-            content.classList.toggle('active');
+            btn.nextElementSibling.classList.toggle('active');
         }
 
         function toggleSelection(el, name, val, cat) {
@@ -557,12 +574,12 @@
 
         function finalSubmit() {
             const btn = document.getElementById('final-submit-btn');
-            const originalText = btn.innerText;
-            btn.innerText = "MENYIMPAN KE SERVER...";
+            btn.innerText = "MENYIMPAN...";
             btn.disabled = true;
 
             const payload = APP_STATE.tempSelected.map(item => ({
-                nisn: "'" + APP_STATE.selectedSiswa.nisn.toString().replace(/'/g, ""),
+                // Menambahkan kutip tunggal (') agar Google Sheets menjaga angka 0 di depan (leading zeros)
+                nisn: APP_STATE.selectedSiswa.nisn ? "'" + APP_STATE.selectedSiswa.nisn : '',
                 nama: APP_STATE.selectedSiswa.nama,
                 kelas: APP_STATE.selectedSiswa.kelas,
                 jurusan: APP_STATE.selectedSiswa.jurusan,
@@ -573,157 +590,152 @@
                 catatan: document.getElementById('log-note').value || '-'
             }));
 
-            fetch(CONFIG.scriptUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(payload)
-            })
+            fetch(CONFIG.scriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
             .then(() => {
-                showNotification("Data berhasil disinkronkan ke Server.");
+                showNotification("Data terkirim.");
                 resetApp();
                 closeConfirmModal();
             })
-            .catch(err => {
-                console.error("Sync Error:", err);
-                showNotification("Gagal menyambung ke Server.", "error");
-            })
+            .catch(() => showNotification("Koneksi gagal.", "error"))
             .finally(() => {
-                btn.innerText = originalText;
+                btn.innerText = "Simpan";
                 btn.disabled = false;
             });
         }
 
         let currentTableData = [];
-
         async function openViewDataModal() {
             const modal = document.getElementById('view-data-modal');
             const tbody = document.getElementById('table-data-body');
-            const info = document.getElementById('table-info');
-            
             modal.classList.remove('hidden');
-            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center opacity-30 text-xs font-bold uppercase tracking-widest">Mengambil data dari server...</td></tr>`;
-            
+            tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-20 text-center opacity-30 text-xs font-bold uppercase">Memuat data...</td></tr>`;
             try {
                 const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.data}`;
-                const response = await fetch(url);
-                const csvText = await response.text();
-                const rows = robustCSVParser(csvText);
-                
-                // Remove header and map to objects
-                currentTableData = rows.slice(1).map(r => ({
-                    no: r[0],
-                    nisn: r[1],
-                    nama: r[2],
-                    kelas: r[3],
-                    jurusan: r[4],
-                    poin: r[5]
+                const res = await fetch(url);
+                const csv = await res.text();
+                currentTableData = robustCSVParser(csv).slice(1).map(r => ({
+                    nisn: (r[1] || '').trim(), nama: (r[2] || '').trim(), kelas: r[3], jurusan: r[4], poin: r[5]
                 })).filter(r => r.nama);
-
                 renderTableRows(currentTableData);
-                info.innerText = `Total: ${currentTableData.length} Siswa Terdaftar`;
-                if (window.lucide) lucide.createIcons();
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center text-red-400 text-xs font-bold">Gagal mengambil data. Periksa koneksi Anda.</td></tr>`;
-                console.error(error);
+                document.getElementById('table-info').innerText = `Total: ${currentTableData.length} Siswa`;
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-20 text-center text-red-400">Gagal memuat.</td></tr>`;
             }
         }
 
         function renderTableRows(data) {
             const tbody = document.getElementById('table-data-body');
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center opacity-30 text-xs font-bold uppercase tracking-widest">Tidak ada data ditemukan</td></tr>`;
-                return;
-            }
-
             tbody.innerHTML = data.map((r, idx) => `
-                <tr class="hover:bg-white/5 transition-all border-b border-white/5 last:border-none">
-                    <td class="px-6 py-4 text-[10px] font-bold opacity-30">${idx + 1}</td>
-                    <td class="px-6 py-4 text-[10px] font-bold text-cyan-400/80">${r.nisn}</td>
+                <tr class="hover:bg-white/5 border-b border-white/5 last:border-none">
+                    <td class="px-6 py-4 text-[10px] opacity-30">${idx + 1}</td>
+                    <td class="px-6 py-4 text-[10px] text-cyan-400/80">${r.nisn || '-'}</td>
                     <td class="px-6 py-4 text-xs font-bold">${r.nama}</td>
-                    <td class="px-6 py-4 text-[10px] font-medium opacity-60">${r.kelas}</td>
-                    <td class="px-6 py-4 text-[10px] font-medium opacity-60">${r.jurusan}</td>
+                    <td class="px-6 py-4 text-[10px] opacity-60">${r.kelas}</td>
+                    <td class="px-6 py-4 text-[10px] opacity-60">${r.jurusan}</td>
                     <td class="px-6 py-4 text-right">
                         <span class="px-3 py-1 rounded-full text-[10px] font-black ${parseFloat(r.poin) >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}">
                             ${parseFloat(r.poin) > 0 ? '+' : ''}${r.poin}
                         </span>
                     </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="openHistoryModal('${r.nisn}', '${r.nama.replace(/'/g, "\\'")}')" class="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all">
+                            <i data-lucide="history" class="w-4 h-4"></i>
+                        </button>
+                    </td>
                 </tr>
             `).join('');
+            if (window.lucide) lucide.createIcons();
         }
 
-        function searchTableData() {
-            const q = document.getElementById('table-search').value.toLowerCase();
-            const filtered = currentTableData.filter(r => 
-                r.nama.toLowerCase().includes(q) || 
-                r.nisn.toString().includes(q)
-            );
-            renderTableRows(filtered);
-        }
+        async function openHistoryModal(nisn, nama) {
+            const modal = document.getElementById('history-modal');
+            const list = document.getElementById('history-list');
+            document.getElementById('hist-student-name').innerText = nama;
+            document.getElementById('hist-student-info').innerText = nisn ? `NISN: ${nisn}` : 'NISN Kosong';
+            
+            modal.classList.remove('hidden');
+            list.innerHTML = `<div class="py-10 text-center text-[10px] font-bold opacity-30 uppercase">Mengambil Riwayat...</div>`;
 
-        function closeViewDataModal() {
-            document.getElementById('view-data-modal').classList.add('hidden');
-        }
-
-        async function downloadSheetData() {
-            const btn = document.getElementById('btn-download');
-            const originalHTML = btn.innerHTML;
             try {
-                btn.disabled = true;
-                btn.innerHTML = `<i class="animate-spin" data-lucide="refresh-cw"></i> Menyiapkan...`;
-                if (window.lucide) lucide.createIcons();
-                
-                showNotification("Sedang mengambil data terbaru...", "info");
-                const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.data}`;
+                const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.riwayat}`;
                 const response = await fetch(url);
                 const csvText = await response.text();
                 const rows = robustCSVParser(csvText);
                 
-                const worksheet = XLSX.utils.aoa_to_sheet(rows);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Data Karakter");
-                
-                const fileName = `ADAB_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
-                XLSX.writeFile(workbook, fileName);
-                showNotification("Data berhasil dieksport.");
-            } catch (error) {
-                showNotification("Gagal mendownload data.", "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
+                // Helper untuk membersihkan tanda petik agar perbandingan akurat
+                const cleanStr = (s) => String(s || '').replace(/'/g, "").trim();
+
+                const history = rows.slice(1).filter(r => {
+                    const rowNisn = cleanStr(r[1]);
+                    const rowNama = cleanStr(r[2]);
+                    const targetNisn = cleanStr(nisn);
+                    const targetNama = cleanStr(nama);
+
+                    if (targetNisn !== '' && rowNisn !== '') {
+                        return rowNisn === targetNisn;
+                    }
+                    return rowNama === targetNama;
+                }).reverse();
+
+                document.getElementById('hist-count').innerText = `${history.length} Catatan ditemukan`;
+
+                if (history.length === 0) {
+                    list.innerHTML = `<div class="py-20 text-center opacity-30 text-xs italic">Belum ada riwayat.</div>`;
+                } else {
+                    list.innerHTML = history.map(h => {
+                        const p = parseFloat(h[4]);
+                        return `
+                        <div class="relative pl-6 pb-6 border-l-2 border-white/5 last:border-l-transparent">
+                            <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full border-4 border-[#0f172a] ${p >= 0 ? 'bg-green-400' : 'bg-red-400'}"></div>
+                            <div class="glass-card p-5 rounded-2xl">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div><p class="text-[10px] font-black text-blue-300 uppercase">${h[5] || 'Kategori'}</p><h5 class="text-xs font-bold">${h[3]}</h5></div>
+                                    <span class="text-xs font-black px-2 py-1 rounded ${p >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">${p > 0 ? '+' : ''}${p}</span>
+                                </div>
+                                <div class="flex justify-between mt-4 pt-4 border-t border-white/5">
+                                    <span class="text-[9px] font-bold opacity-40">Guru: ${h[6]}</span>
+                                    <span class="text-[9px] font-bold opacity-40">${h[0]}</span>
+                                </div>
+                                ${h[7] && h[7] !== '-' ? `<div class="mt-3 p-3 bg-black/20 rounded-xl"><p class="text-[9px] italic opacity-60">Catatan: ${h[7]}</p></div>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
                 if (window.lucide) lucide.createIcons();
-            }
+            } catch (err) { list.innerHTML = `<div class="py-10 text-center text-red-400">Gagal memuat.</div>`; }
         }
 
-        function showNotification(message, type = 'success') {
+        function searchTableData() {
+            const q = document.getElementById('table-search').value.toLowerCase();
+            renderTableRows(currentTableData.filter(r => r.nama.toLowerCase().includes(q) || r.nisn.includes(q)));
+        }
+
+        function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
+        function closeViewDataModal() { document.getElementById('view-data-modal').classList.add('hidden'); }
+
+        async function downloadSheetData() {
+            try {
+                showNotification("Mengunduh...");
+                const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.data}`;
+                const res = await fetch(url);
+                const csv = await res.text();
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(robustCSVParser(csv)), "Data Karakter");
+                XLSX.writeFile(wb, `Laporan_ADAB_${new Date().toISOString().split('T')[0]}.xlsx`);
+            } catch (e) { showNotification("Gagal unduh.", "error"); }
+        }
+
+        function showNotification(m, t = 'success') {
             const toast = document.getElementById('notification-toast');
-            const iconBg = document.getElementById('notif-icon-bg');
-            const icon = document.getElementById('notif-icon');
-            const title = document.getElementById('notif-title');
-            const msg = document.getElementById('notif-message');
-
-            if (type === 'success') {
-                toast.style.borderLeftColor = '#4facfe';
-                iconBg.className = 'w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/20 text-blue-400';
-                icon.setAttribute('data-lucide', 'check-circle');
-                title.innerText = 'Berhasil';
-            } else {
-                toast.style.borderLeftColor = '#f87171';
-                iconBg.className = 'w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/20 text-red-400';
-                icon.setAttribute('data-lucide', 'alert-circle');
-                title.innerText = 'Gagal';
-            }
-
-            msg.innerText = message;
-            if (window.lucide) lucide.createIcons();
+            document.getElementById('notif-message').innerText = m;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 4000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
         function resetApp() {
             APP_STATE.tempSelected = [];
             APP_STATE.selectedSiswa = null;
             document.getElementById('search-box').value = '';
-            document.getElementById('log-note').value = '';
             document.getElementById('profile-card').classList.add('opacity-0', 'translate-y-4');
             document.getElementById('action-panel').classList.add('pointer-events-none', 'opacity-40');
             document.getElementById('submit-area').classList.add('hidden');
@@ -731,7 +743,6 @@
         }
 
         function logout() { location.reload(); }
-
         window.onload = fetchData;
     </script>
 </body>
