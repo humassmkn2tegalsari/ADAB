@@ -748,8 +748,15 @@
         function closeViewDataModal() { document.getElementById('view-data-modal').classList.add('hidden'); }
 
         async function downloadSheetData() {
-        const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.data}`;
-        window.open(url, '_blank');
+            try {
+                showNotification("Mempersiapkan dokumen...");
+                const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/export?format=csv&gid=${CONFIG.gids.data}`;
+                const res = await fetch(url);
+                const csv = await res.text();
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(robustCSVParser(csv)), "Laporan Karakter");
+                XLSX.writeFile(wb, `ADAB_REPORT_${new Date().toISOString().split('T')[0]}.xlsx`);
+            } catch (e) { showNotification("Ekspor gagal.", "error"); }
         }
 
         function showNotification(m, t = 'success') {
