@@ -11,57 +11,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* ============ DARK THEME (DEFAULT) ============ */
         :root {
             --glass-bg: rgba(15, 23, 42, 0.65);
             --glass-border: rgba(255, 255, 255, 0.08);
             --accent-primary: #38bdf8;
             --accent-secondary: #818cf8;
             --text-main: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --bg-primary: #020617;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-hover: rgba(255, 255, 255, 0.06);
-            --input-bg: rgba(0, 0, 0, 0.2);
-            --border-light: rgba(255, 255, 255, 0.1);
-            --border-focus: rgba(56, 189, 248, 0.4);
-            --badge-pos-bg: rgba(22, 163, 74, 0.15);
-            --badge-pos-text: #4ade80;
-            --badge-neg-bg: rgba(220, 38, 38, 0.15);
-            --badge-neg-text: #f87171;
-            --modal-backdrop: rgba(2, 6, 23, 0.85);
-            --table-header-bg: rgba(255, 255, 255, 0.02);
-            --table-row-hover: rgba(255, 255, 255, 0.03);
-        }
-
-        /* ============ LIGHT THEME ============ */
-        [data-theme="light"] {
-            --glass-bg: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(15, 23, 42, 0.08);
-            --accent-primary: #0284c7;
-            --accent-secondary: #4f46e5;
-            --text-main: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --bg-primary: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.85);
-            --card-hover: rgba(255, 255, 255, 0.95);
-            --input-bg: rgba(241, 245, 249, 0.8);
-            --border-light: rgba(15, 23, 42, 0.1);
-            --border-focus: rgba(2, 132, 199, 0.4);
-            --badge-pos-bg: rgba(22, 163, 74, 0.1);
-            --badge-pos-text: #16a34a;
-            --badge-neg-bg: rgba(220, 38, 38, 0.1);
-            --badge-neg-text: #dc2626;
-            --modal-backdrop: rgba(15, 23, 42, 0.45);
-            --table-header-bg: #f1f5f9;
-            --table-row-hover: rgba(2, 132, 199, 0.04);
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-primary);
+            background-color: #020617;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 0%, rgba(129, 140, 248, 0.15) 0px, transparent 50%),
@@ -73,15 +33,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.5s ease, color 0.5s ease;
-        }
-
-        [data-theme="light"] body {
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(2, 132, 199, 0.05) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(79, 70, 229, 0.05) 0px, transparent 50%);
         }
 
         .glass-panel {
@@ -90,23 +41,18 @@
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
         .glass-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-light);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .glass-card:hover {
-            background: var(--card-hover);
-            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
-        }
-
-        [data-theme="light"] .glass-card:hover {
-            box-shadow: 0 12px 40px 0 rgba(2, 132, 199, 0.15);
         }
 
         .btn-glow {
@@ -116,46 +62,23 @@
             transition: all 0.3s ease;
         }
 
-        [data-theme="light"] .btn-glow {
-            color: white;
-            box-shadow: 0 10px 20px -10px rgba(2, 132, 199, 0.4);
-        }
-
         .btn-glow:hover:not(:disabled) {
             transform: scale(1.02);
             box-shadow: 0 15px 25px -10px rgba(56, 189, 248, 0.6);
         }
 
-        [data-theme="light"] .btn-glow:hover:not(:disabled) {
-            box-shadow: 0 15px 25px -10px rgba(2, 132, 199, 0.5);
-        }
-
-        .btn-glow:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         .input-elegant {
-            background: var(--input-bg);
-            border: 1px solid var(--border-light);
-            color: var(--text-main);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .input-elegant::placeholder {
-            color: var(--text-muted);
         }
 
         .input-elegant:focus {
             background: rgba(0, 0, 0, 0.4);
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 4px var(--border-focus);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
             outline: none;
-        }
-
-        [data-theme="light"] .input-elegant:focus {
-            background: white;
         }
 
         .indicator-content {
@@ -171,48 +94,18 @@
             box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.1);
         }
         
-        [data-theme="light"] .indicator-item.selected {
-            background: rgba(2, 132, 199, 0.1) !important;
-            box-shadow: inset 0 0 15px rgba(2, 132, 199, 0.08);
-        }
-        
         .check-icon { opacity: 0; transform: scale(0.5); transition: all 0.3s; }
         .indicator-item.selected .check-icon { opacity: 1; transform: scale(1); }
 
         .scrollbar-hide::-webkit-scrollbar { width: 4px; }
         .scrollbar-hide::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        [data-theme="light"] .scrollbar-hide::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-slide { animation: slideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
-
-        /* Badge styles */
-        .badge-positive {
-            background: var(--badge-pos-bg);
-            color: var(--badge-pos-text);
-        }
-        .badge-negative {
-            background: var(--badge-neg-bg);
-            color: var(--badge-neg-text);
-        }
-
-        /* Table styles */
-        thead tr {
-            background: var(--table-header-bg);
-        }
-        tbody tr:hover {
-            background: var(--table-row-hover);
-        }
-
-        /* Modal backdrop */
-        #confirm-modal, #view-data-modal, #history-modal {
-            background: var(--modal-backdrop);
-        }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- Toast Notification -->
     <div id="notification-toast" class="glass-panel px-6 py-4 rounded-2xl flex items-center gap-4 fixed top-8 right-8 z-[1000] translate-x-[150%] transition-transform duration-500 shadow-2xl">
         <div id="notif-icon-bg" class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/20">
             <i id="notif-icon" data-lucide="info" class="w-5 h-5 text-blue-400"></i>
@@ -223,7 +116,6 @@
         </div>
     </div>
 
-    <!-- Login Screen -->
     <div id="login-screen" class="glass-panel w-full max-w-md p-10 rounded-[40px] text-center animate-slide">
         <div class="mb-10 relative">
             <div class="absolute -top-10 -left-10 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full"></div>
@@ -261,7 +153,6 @@
         </div>
     </div>
 
-    <!-- Main Dashboard -->
     <div id="main-dashboard" class="hidden w-full max-w-6xl animate-slide">
         <header class="flex flex-col md:flex-row justify-between items-end md:items-center gap-6 mb-10">
             <div>
@@ -337,7 +228,6 @@
                 </div>
             </div>
 
-            <!-- Action Panel -->
             <div id="action-panel" class="lg:col-span-8 opacity-40 pointer-events-none transition-all duration-500">
                 <div class="glass-panel p-8 rounded-[40px] min-h-[600px] flex flex-col relative overflow-hidden">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -463,33 +353,6 @@
     </div>
 
     <script>
-        // ============ AUTO THEME SWITCHER (TIME-BASED) ============
-        // Tidak ada UI indicator, bekerja silently di background
-        (function initAutoTheme() {
-            const hour = new Date().getHours();
-            // Siang: 06:00 - 17:59 → light | Malam: 18:00 - 05:59 → dark
-            const isDaytime = hour >= 6 && hour < 18;
-            
-            if (isDaytime) {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
-            // Jika malam, biarkan default dark theme (tanpa atribut)
-            
-            // Optional: Re-check setiap jam jika page tetap terbuka
-            setInterval(() => {
-                const currentHour = new Date().getHours();
-                const shouldBeLight = currentHour >= 6 && currentHour < 18;
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                
-                if (shouldBeLight && currentTheme !== 'light') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                } else if (!shouldBeLight && currentTheme === 'light') {
-                    document.documentElement.removeAttribute('data-theme');
-                }
-            }, 60 * 60 * 1000); // Check setiap 1 jam
-        })();
-        // ============ END AUTO THEME SWITCHER ============
-
         const CONFIG = {
             sheetId: '1baNd7ocNwJCs-BFiIj36hapP75OJOa8ZboIpjhh3SIk',
             scriptUrl: 'https://script.google.com/macros/s/AKfycbwKKM8s7guQv04gBEoR8KAh2e60bbdX6xb4RM8MqOSrEWZV-b5RAsIhkqS5sdXFWVZ1/exec',
@@ -691,7 +554,7 @@
                                             </div>
                                             <span class="text-xs font-medium text-slate-200">${item.name}</span>
                                         </div>
-                                        <span class="text-[9px] font-black px-3 py-1 rounded-full ${item.val > 0 ? 'badge-positive' : 'badge-negative'}">
+                                        <span class="text-[9px] font-black px-3 py-1 rounded-full ${item.val > 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}">
                                             ${item.val > 0 ? '+' : ''}${item.val} POIN
                                         </span>
                                     </div>
@@ -796,7 +659,7 @@
                     <td class="px-8 py-5 text-xs font-bold text-slate-200">${r.nama}</td>
                     <td class="px-8 py-5 text-[10px] opacity-50 font-medium uppercase tracking-wider">${r.kelas} ${r.jurusan}</td>
                     <td class="px-8 py-5 text-right">
-                        <span class="px-3 py-1.5 rounded-lg text-[10px] font-black ${parseFloat(r.poin) >= 0 ? 'badge-positive' : 'badge-negative'}">
+                        <span class="px-3 py-1.5 rounded-lg text-[10px] font-black ${parseFloat(r.poin) >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}">
                             ${parseFloat(r.poin) > 0 ? '+' : ''}${r.poin}
                         </span>
                     </td>
@@ -855,7 +718,7 @@
                                         <p class="text-[9px] font-black text-sky-400 uppercase tracking-widest mb-1">${h[5] || 'UMUM'}</p>
                                         <h5 class="text-sm font-bold text-slate-100">${h[3]}</h5>
                                     </div>
-                                    <span class="text-[10px] font-black px-3 py-1 rounded-full ${p >= 0 ? 'badge-positive' : 'badge-negative'}">${p > 0 ? '+' : ''}${p}</span>
+                                    <span class="text-[10px] font-black px-3 py-1 rounded-full ${p >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}">${p > 0 ? '+' : ''}${p}</span>
                                 </div>
                                 <div class="flex flex-wrap items-center justify-between gap-4 mt-6 pt-5 border-t border-white/5">
                                     <div class="flex items-center gap-2">
@@ -900,6 +763,7 @@
             const toast = document.getElementById('notification-toast');
             document.getElementById('notif-message').innerText = m;
             toast.classList.add('show');
+            // Ganti icon berdasarkan type jika perlu
             toast.classList.add('translate-x-0');
             toast.classList.remove('translate-x-[150%]');
             setTimeout(() => {
